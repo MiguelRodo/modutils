@@ -12,8 +12,8 @@ test_that("get_mod_fml_as_chr works", {
   # full
   expect_true(identical(get_mod_fml_as_chr(var_dep = "resp",
                                   var_exp = c("Progressor", "QFT"),
-                                  var_exp_spline = var_exp_spline <- list("timeFromMaxTimeToTB" = list("fn" = "ns",
-                                                                                                       "params" = list("knots" = c(1, 3, 5)))),
+                                  var_exp_spline = list("timeFromMaxTimeToTB" = list("fn" = "ns",
+                                                                                     "params" = list("knots" = c(1, 3, 5)))),
                                   var_re = "SubjectID",
                                   var_offset = "log(n_cell)",
                                   var_conf = c("Sex", "DaysSinceEntry"),
@@ -53,8 +53,8 @@ test_that("get_mod_fml_as_chr works", {
                        full = "resp ~ 1 + (1|SubjectID) + offset(log(n_cell)) + Sex + DaysSinceEntry + BMI + splines::ns(Age) + Progressor + QFT + splines::ns(timeFromMaxTimeToTB, knots = c(1, 3, 5))")
   expect_true(identical(get_mod_fml_as_chr(var_dep = "resp",
                                               var_exp = c("Progressor", "QFT"),
-                                              var_exp_spline = var_exp_spline <- list("timeFromMaxTimeToTB" = list("fn" = "ns",
-                                                                                                                   "params" = list("knots" = c(1, 3, 5)))),
+                                              var_exp_spline = list("timeFromMaxTimeToTB" = list("fn" = "ns",
+                                                                                                 "params" = list("knots" = c(1, 3, 5)))),
                                               var_re = "SubjectID",
                                               var_offset = "log(n_cell)",
                                               var_conf = c("Sex", "DaysSinceEntry"),
