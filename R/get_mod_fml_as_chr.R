@@ -46,10 +46,10 @@
 #' @importFrom magrittr %<>%
 #'
 #' @export
-create_mod_fml_as_chr <- function(var_dep, var_exp = NULL, var_exp_spline = NULL, var_re = NULL,
-                                  var_offset = NULL, var_conf = NULL,
-                                  rhs_text = NULL,
-                                  int = TRUE, sub_exp = 0){
+get_mod_fml_as_chr <- function(var_dep, var_exp = NULL, var_exp_spline = NULL, var_re = NULL,
+                               var_offset = NULL, var_conf = NULL,
+                               rhs_text = NULL,
+                               int = TRUE, sub_exp = 0){
 
   # set dependent variable
   lhs <- var_dep
