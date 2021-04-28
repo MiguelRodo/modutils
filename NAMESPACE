@@ -2,7 +2,8 @@
 
 export("%>%")
 export(get_mod_fml_as_chr)
-export(get_wald_stats)
 export(refit_mod)
+export(test_lr)
+export(test_wald)
 importFrom(magrittr,"%<>%")
 importFrom(magrittr,"%>%")

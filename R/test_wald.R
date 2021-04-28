@@ -30,32 +30,32 @@
 #' }
 #'
 #' @export
-get_wald_stats <- function(fit, var, match_condn = 'start', match_print = 'inexact',
+test_wald <- function(fit, var, match_condn = 'start', match_print = 'inexact',
                            intercept_nm = "(Intercept)"){
 
   # preparation
   # ==================
 
   # checks for availability
-  if(missing(var)) stop("var missing in get_wald_stats")
-  if(missing(fit)) stop("fit missing in get_wald_stats")
+  if(missing(var)) stop("var missing in test_wald")
+  if(missing(fit)) stop("fit missing in test_wald")
 
   # ensure var is a list
   if(!is.list(var)){
-    warning("var is coerced to a list in get_wald_stats")
+    warning("var is coerced to a list in test_wald")
     var <- list(var)
   }
   # ensure 0 and 1 are characters
   var <- purrr::map(var, function(x){
     if(is.character(x)) return(x)
     if(x == 0){
-      warning("0 as numeric coerced to 0 as character in var in get_wald_stats")
+      warning("0 as numeric coerced to 0 as character in var in test_wald")
       return("0")
     } else if(x == -1){
-      warning("-1 as numeric coerced to 0 as character in var in get_wald_stats")
+      warning("-1 as numeric coerced to 0 as character in var in test_wald")
       return("-1")
     }
-    stop("input to var numeric but neither 0 nor -1 and so is not meaningful in var param in get_wald_stats")
+    stop("input to var numeric but neither 0 nor -1 and so is not meaningful in var param in test_wald")
     })
 
   # extract estimates and vcov mat
@@ -66,7 +66,7 @@ get_wald_stats <- function(fit, var, match_condn = 'start', match_print = 'inexa
   # ==================
 
   purrr::map_df(var, function(var){
-    .get_wald_stats(est = fit_list$est, vcov = fit_list$vcov,
+    .test_wald(est = fit_list$est, vcov = fit_list$vcov,
                   var = var, match_condn = match_condn,
                   match_print = match_print, intercept_nm = intercept_nm)})
 }
@@ -96,15 +96,15 @@ get_est_and_vcov.list <- function(fit){
 }
 
 #' @title Calculate wald statistic from coef estimates and vcov-mat
-.get_wald_stats <- function(est, vcov, var, match_condn, match_print, intercept_nm){
+.test_wald <- function(est, vcov, var, match_condn, match_print, intercept_nm){
 
   # preparation
   # ==================
 
   # checks for availability
-  if(missing(var)) paste0("var missing in get_wald_stats")
-  if(missing(est)) paste0("est missing in get_wald_stats")
-  if(missing(vcov)) paste0("vcov missing in get_wald_stats")
+  if(missing(var)) paste0("var missing in test_wald")
+  if(missing(est)) paste0("est missing in test_wald")
+  if(missing(vcov)) paste0("vcov missing in test_wald")
 
   # set var to all names if given as NULL
   # -------------------
@@ -124,7 +124,7 @@ get_est_and_vcov.list <- function(fit){
 
   # get wald stats
   # ==================
-  .get_wald_stats_ind(est = est, vcov = vcov, ind = coef_ind_vec)
+  .test_wald_ind(est = est, vcov = vcov, ind = coef_ind_vec)
 }
 
 #' @title Get indices of variables to include in wald test
@@ -307,28 +307,28 @@ get_est_and_vcov.list <- function(fit){
 #' ind_vec_lgl <- c(TRUE, FALSE, TRUE)
 #' ind_vec_num <- c(1, 3)
 #' # using logical vector to indicate which parameters are to be tested
-#' .get_wald_stats(est = est_vec, vcov = vcov_mat, ind = ind_vec_lgl)
+#' .test_wald(est = est_vec, vcov = vcov_mat, ind = ind_vec_lgl)
 #' # using numeric vector to indicate which parameters are to be tested
-#' .get_wald_stats(est = est_vec, vcov = vcov_mat, ind = ind_vec_num)
-.get_wald_stats_ind <- function(est, vcov, ind){
+#' .test_wald(est = est_vec, vcov = vcov_mat, ind = ind_vec_num)
+.test_wald_ind <- function(est, vcov, ind){
 
   # check entries
   # --------------------
 
   if(missing(ind) || missing(vcov) || missing(est)){
-    stop("at least one of est, vcov and ind params in .get_wald_stats missing")
+    stop("at least one of est, vcov and ind params in .test_wald missing")
   }
 
 
   if(!is.matrix(vcov)){
-    stop(paste0("vcov in .get_wald_stats has class ",
+    stop(paste0("vcov in .test_wald has class ",
                 paste0(class(vcov), " "),
                 " when it should have class numeric"))
   }
-  if(!is.numeric(vcov[1,1])) stop(paste0("vcov entries in .get_wald_stats have class ",
+  if(!is.numeric(vcov[1,1])) stop(paste0("vcov entries in .test_wald have class ",
                                          paste0(class(vcov[1,1]), " "),
                                          " when it should have class numeric"))
-  if(!is.numeric(est[1])) stop(paste0("est entries in .get_wald_stats have class ",
+  if(!is.numeric(est[1])) stop(paste0("est entries in .test_wald have class ",
                                       paste0(class(est[1]), " "),
                                       " when it should have class numeric"))
 
@@ -337,7 +337,7 @@ get_est_and_vcov.list <- function(fit){
                "logical" = sum(ind),
                "integer" = ,
                "numeric" = length(ind),
-               stop("params ind in .get_wald_stats of class ", paste0(class(ind, collapse = " ")),
+               stop("params ind in .test_wald of class ", paste0(class(ind, collapse = " ")),
                     " when it should be logical, integer or numeric"))
 
 

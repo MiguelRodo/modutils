@@ -1,4 +1,4 @@
-test_that("get_wald_stats works", {
+test_that("test_wald works", {
 
   # test data
   set.seed(2106); n_id <- 30
@@ -20,11 +20,11 @@ test_that("get_wald_stats works", {
                                             family = 'binomial')))
 
   # check that a tibble is returned
-  expect_identical(class(get_wald_stats(fit = mod_lm, var = list('0')))[1],
+  expect_identical(class(test_wald(fit = mod_lm, var = list('0')))[1],
                    "tbl_df")
-  expect_identical(class(get_wald_stats(fit = mod_lmer, var = list('0')))[1],
+  expect_identical(class(test_wald(fit = mod_lmer, var = list('0')))[1],
                    "tbl_df")
-  expect_identical(class(get_wald_stats(fit = mod_glmer, var = list('0')))[1],
+  expect_identical(class(test_wald(fit = mod_glmer, var = list('0')))[1],
                    "tbl_df")
 
   # check that continuous var matches default output
@@ -40,14 +40,14 @@ test_that("get_wald_stats works", {
 
   # lm
   lm_stat_x <- coefficients(summary(mod_lm_x))["x","t value"]
-  lm_tbl_x_wald <- get_wald_stats(fit = mod_lm_x, var = list("x"))
+  lm_tbl_x_wald <- test_wald(fit = mod_lm_x, var = list("x"))
   expect_equal(lm_stat_x, sqrt(lm_tbl_x_wald$stat[1]))
   lm_p_x_norm <- 2 * pnorm(sqrt(lm_tbl_x_wald$stat[1]), lower.tail = FALSE)
   expect_equal(lm_p_x_norm, lm_tbl_x_wald$p[1])
 
   # lmer
   lmer_stat_x <- coefficients(summary(mod_lmer_x))["x","t value"]
-  lmer_tbl_x_wald <- get_wald_stats(fit = mod_lmer_x, var = list("x"))
+  lmer_tbl_x_wald <- test_wald(fit = mod_lmer_x, var = list("x"))
   expect_equal(lmer_stat_x, sqrt(lmer_tbl_x_wald$stat))
   expect_identical(1L, lmer_tbl_x_wald$df)
   lmer_p_x_norm <- 2 * pnorm(sqrt(lmer_tbl_x_wald$stat), lower.tail = FALSE)
@@ -55,7 +55,7 @@ test_that("get_wald_stats works", {
 
   # glmer
   glmer_stat_x <- coefficients(summary(mod_glmer_x))["x","z value"]
-  glmer_tbl_x_wald <- get_wald_stats(fit = mod_glmer_x, var = list("x"))
+  glmer_tbl_x_wald <- test_wald(fit = mod_glmer_x, var = list("x"))
   expect_equal(abs(glmer_stat_x), sqrt(glmer_tbl_x_wald$stat[1])) #
   expect_identical(1L, glmer_tbl_x_wald$df)
   glmer_p_x_norm <- 2 * pnorm(sqrt(glmer_tbl_x_wald$stat), lower.tail = FALSE)
@@ -76,10 +76,10 @@ test_that("get_wald_stats works", {
 
   # lm
   lm_stat_x_lin <- coefficients(summary(mod_lm_x_lin))["x","t value"]
-  lm_tbl_x_wald_1 <- get_wald_stats(fit = mod_lm_x_spline_df_1, var = list("x"),
+  lm_tbl_x_wald_1 <- test_wald(fit = mod_lm_x_spline_df_1, var = list("x"),
                                   match_condn = 'any')
   expect_equal(lm_stat_x_lin, sqrt(lm_tbl_x_wald_1$stat))
-  lm_tbl_x_wald_3 <- get_wald_stats(fit = mod_lm_x_spline_df_3, var = list("x"),
+  lm_tbl_x_wald_3 <- test_wald(fit = mod_lm_x_spline_df_3, var = list("x"),
                                   match_condn = 'any')
   # numbers are huge and models are different, so a difference of less than five
   # percent in the actual stat seems fine
@@ -91,12 +91,12 @@ test_that("get_wald_stats works", {
   # -------------------
 
   # error if match_condn = 'exact'
-  expect_error(get_wald_stats(fit = mod_lm_x_spline_df_1, var = list("x"),
+  expect_error(test_wald(fit = mod_lm_x_spline_df_1, var = list("x"),
                               match_condn = 'exact'))
 
   # check that we can match when we use non-alphanumeric characters
   expect_identical(lm_tbl_x_wald_3,
-                   get_wald_stats(fit = mod_lm_x_spline_df_3, var = list("splines::ns(x"),
+                   test_wald(fit = mod_lm_x_spline_df_3, var = list("splines::ns(x"),
                                   match_condn = 'start'))
 
 
