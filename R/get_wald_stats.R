@@ -4,7 +4,8 @@
 #' to then extract the estimates and the var-cov matrix before calculating the Wald statistics.
 #' If a list, then must have elements with names \code{est} and \code{vcov}, corresponding
 #' to the numeric vector of estimates and the variance-covariance matrix of
-#' @param var character vector. Name(s) of variables for which the Wald test is required. If \code{"0"},
+#' @param var list of character vector(s). Each element is a vector of name(s) of variables for which
+#' the Wald test is required. If \code{"0"},
 #' then all variables are automatically included. If \code{"-1"}, then all variables except
 #' intercept are included. No default.
 #' @param match_condn 'exact', 'start' or 'any'. If \code{'exact'}, then
@@ -29,7 +30,6 @@
 #' }
 #'
 #' @export
-#'
 get_wald_stats <- function(fit, var, match_condn = 'start', match_print = 'inexact',
                            intercept_nm = "(Intercept)"){
 
@@ -40,6 +40,24 @@ get_wald_stats <- function(fit, var, match_condn = 'start', match_print = 'inexa
   if(missing(var)) stop("var missing in get_wald_stats")
   if(missing(fit)) stop("fit missing in get_wald_stats")
 
+  # ensure var is a list
+  if(!is.list(var)){
+    warning("var is coerced to a list in get_wald_stats")
+    var <- list(var)
+  }
+  # ensure 0 and 1 are characters
+  var <- purrr::map(var, function(x){
+    if(is.character(x)) return(x)
+    if(x == 0){
+      warning("0 as numeric coerced to 0 as character in var in get_wald_stats")
+      return("0")
+    } else if(x == -1){
+      warning("-1 as numeric coerced to 0 as character in var in get_wald_stats")
+      return("-1")
+    }
+    stop("input to var numeric but neither 0 nor -1 and so is not meaningful in var param in get_wald_stats")
+    })
+
   # extract estimates and vcov mat
   # -----------------
   fit_list <- get_est_and_vcov(fit = fit)
@@ -47,9 +65,10 @@ get_wald_stats <- function(fit, var, match_condn = 'start', match_print = 'inexa
   # calculate Wald statistics
   # ==================
 
-  .get_wald_stats(est = fit_list$est, vcov = fit_list$vcov,
+  purrr::map_df(var, function(var){
+    .get_wald_stats(est = fit_list$est, vcov = fit_list$vcov,
                   var = var, match_condn = match_condn,
-                  match_print = match_print, intercept_nm = intercept_nm)
+                  match_print = match_print, intercept_nm = intercept_nm)})
 }
 
 get_est_and_vcov <- function(fit){
@@ -204,16 +223,6 @@ get_est_and_vcov.list <- function(fit){
 #'
 .bracket_non_an_chr <- function(x){
   purrr::map_chr(x, function(x_ind){
-    purrr::map_chr(1:stringr::str_length(x_ind), function(i){
-      chr_curr <- stringr::str_sub(x_ind, i, i)
-      ifelse(stringr::str_detect(chr_curr, "\\w"), chr_curr, paste0("[[", chr_curr, "]]"))
-    }) %>%
-      paste0(collapse = "")
-  })
-}
-
-.bracket_non_an_chr <- function(x){
-  purrr::map_chr(x, function(x_ind){
     x_split_vec <- purrr::map_chr(1:stringr::str_length(x_ind),
                                   function(i) stringr::str_sub(x_ind, i, i))
     is_an_vec <- purrr::map_lgl(x_split_vec, function(chr) stringr::str_detect(chr, "\\w"))
@@ -276,8 +285,6 @@ get_est_and_vcov.list <- function(fit){
     paste0(info_tbl$add, collapse = "")
   })
 }
-
-
 
 #' @title Calculate Wald statistic given summary statistics
 #'

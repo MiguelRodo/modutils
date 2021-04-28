@@ -9,8 +9,6 @@ if(FALSE){
   library(dplyr)
   theme_set(theme_cowplot())
 
-
-
   set.seed(2106); n_id <- 30
   test_tbl <- tibble::tibble(id = rep(as.character(1:n_id), each = 2),
                              grp = rep(as.character(1:2), each = n_id),
@@ -33,8 +31,6 @@ if(FALSE){
            "logit" = function(x) 1/(1+exp(-x)),
            stop(paste0("link ", link, " not recognised in get_link_inv_fn.glmer")))
   }
-
-
   get_fml <- function(mod_sum) UseMethod("get_fml")
   get_fml.summary.merMod <- function(mod_sum) mod_sum$call$formula
 
