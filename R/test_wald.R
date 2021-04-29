@@ -124,7 +124,7 @@ get_est_and_vcov.list <- function(fit){
 
   # get wald stats
   # ==================
-  .test_wald_ind(est = est, vcov = vcov, ind = coef_ind_vec)
+  .test_wald_ind(est = est, vcov = vcov, ind = coef_ind_vec, var = var)
 }
 
 #' @title Get indices of variables to include in wald test
@@ -310,7 +310,7 @@ get_est_and_vcov.list <- function(fit){
 #' .test_wald(est = est_vec, vcov = vcov_mat, ind = ind_vec_lgl)
 #' # using numeric vector to indicate which parameters are to be tested
 #' .test_wald(est = est_vec, vcov = vcov_mat, ind = ind_vec_num)
-.test_wald_ind <- function(est, vcov, ind){
+.test_wald_ind <- function(est, vcov, ind, var){
 
   # check entries
   # --------------------
@@ -318,6 +318,8 @@ get_est_and_vcov.list <- function(fit){
   if(missing(ind) || missing(vcov) || missing(est)){
     stop("at least one of est, vcov and ind params in .test_wald missing")
   }
+  if(missing(var)) var <- NA
+  if(is.null(var)) var <- NA
 
 
   if(!is.matrix(vcov)){
@@ -352,5 +354,6 @@ get_est_and_vcov.list <- function(fit){
   wald_stat <- as.numeric(wald_stat)
   wald_p <- pchisq(wald_stat, df = df, lower.tail = FALSE)
 
-  tibble::tibble("test" = 'wald', "stat" = wald_stat, "df" = length(ind),  "p" = wald_p)
+  tibble::tibble(var = paste0(var, collapse = "; "),
+                 "test" = 'wald', "stat" = wald_stat, "df" = length(ind),  "p" = wald_p)
 }

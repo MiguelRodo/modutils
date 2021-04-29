@@ -95,9 +95,9 @@ test_that("test_wald works", {
                               match_condn = 'exact'))
 
   # check that we can match when we use non-alphanumeric characters
-  expect_identical(lm_tbl_x_wald_3,
+  expect_identical(lm_tbl_x_wald_3[,-which(colnames(lm_tbl_x_wald_3) == 'var')],
                    test_wald(fit = mod_lm_x_spline_df_3, var = list("splines::ns(x"),
-                                  match_condn = 'start'))
+                                  match_condn = 'start')[,-which(colnames(lm_tbl_x_wald_3) == 'var')])
 
 
 })
