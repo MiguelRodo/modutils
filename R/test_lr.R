@@ -63,8 +63,22 @@ test_lr <- function(mod_large, mod_small, var = NULL){
   # get coefficients that differ between the two
   if(is.null(var) || var == ""){
     coef1 <- get_coef(mod_large)$var
-    coef0 <- get_coef(mod_small)$var
-    var <- setdiff(coef1, coef0)
+    coef0 <- suppressWarnings(get_coef(mod_small)$var)
+    coef0 <- switch(as.character(is.null(coef0)),
+                    "TRUE" = "(no_intercept)",
+                    "FALSE" = coef0)
+    coef_diff_vec <- setdiff(coef1, coef0)
+    coef_diff <- paste0(coef_diff_vec, collapse = "; ")
+    # use this var if the small model is a "null" model
+    var <- switch(paste0(coef0, collapse = "; "),
+                  "(Intercept)" = ifelse(length(coef_diff_vec) > 1,
+                                         "All of interest (exc. intercept)",
+                                         coef_diff),
+                  "(no_intercept)" = ifelse(length(coef_diff_vec) > 1,
+                                            "All of interest (inc. intercept)",
+                                            coef_diff),
+                  coef_diff)
+    var <- coef_diff
   }
 
   # perform test
@@ -75,8 +89,7 @@ test_lr <- function(mod_large, mod_small, var = NULL){
   df_test <- df1 - df0
   lr_p <- pchisq(lr_stat, df = df_test, lower.tail = FALSE)
 
-  tibble::tibble(var = ifelse(is.null(var), NA_character_,
-                              paste0(var, collapse = "; ")),
+  tibble::tibble(var = var,
                  test = "lr",
                  stat = lr_stat,
                  df = df_test,
@@ -121,9 +134,8 @@ get_coef.glmerMod <- function(mod){
 }
 
 
-
 #' @title Generic function to extract fixed-effects degrees of freedom
 get_dof <- function(mod) UseMethod("get_dof")
 get_dof.lm <- function(mod) length(mod$coefficients)
-get_dof.lmerMod <- function(mod) ncol(coef(mod)$grp)
-get_dof.glmerMod <- function(mod) ncol(coef(mod)$grp)
+get_dof.lmerMod <- function(mod) ncol(coef(mod)[[1]])
+get_dof.glmerMod <- function(mod) ncol(coef(mod)[[1]])

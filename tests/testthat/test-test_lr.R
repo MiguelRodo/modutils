@@ -2,6 +2,7 @@ test_that("test_lr works", {
   set.seed(2106); n_id <- 30
   test_tbl <- tibble::tibble(id = rep(as.character(1:n_id), each = 2),
                              grp = rep(as.character(1:2), each = n_id),
+                             grp_add = rep(as.character(1:4), each = n_id/2),
                              y_re = rep(rnorm(n_id), each = 2),
                              x = rnorm(n_id * 2),
                              y = x^4 * ifelse(grp == "1", 3, 0) + y_re + rnorm(20, sd = 0.3))
@@ -16,6 +17,7 @@ test_that("test_lr works", {
   mod_lm_int <- lm(y ~ 1, data = test_tbl)
   mod_lm <- lm(y ~ splines::ns(x, 3), data = test_tbl)
   mod_lmer <- lme4::lmer(y ~ x + (1|grp), data = test_tbl)
+  mod_lmer_re2 <- lme4::lmer(y ~ x + (1|grp) + (x|grp_add), data = test_tbl)
   mod_glmer <- suppressMessages(suppressWarnings(lme4::glmer(y ~ x + (1|grp), data = test_tbl,
                                                              family = 'binomial')))
 
@@ -39,6 +41,7 @@ test_that("test_lr works", {
   expect_identical(get_dof(mod_lm_int), 1L)
   expect_identical(get_dof(mod_lm), 4L)
   expect_identical(get_dof(mod_lmer), 2L)
+  expect_identical(get_dof(mod_lmer_re2), 2L)
   expect_identical(get_dof(mod_glmer), 2L)
 
   # check lr test output
@@ -49,11 +52,27 @@ test_that("test_lr works", {
   mod_lmer_int <- lme4::lmer(y ~ (1|grp), data = test_tbl)
   mod_glmer_int <- suppressMessages(suppressWarnings(lme4::glmer(y ~ (1|grp), data = test_tbl,
                                                              family = 'binomial')))
+  mod_lm_lin_grp <- lm(y ~ x + grp, data = test_tbl)
   # check
-  test_lr(mod_glmer, mod_glmer_int)
-  test_lr(mod_lmer, mod_lmer_int)
   expect_identical(test_lr(mod_lm, mod_lm_lin)$var,
                    "splines::ns(x, 3)1; splines::ns(x, 3)2; splines::ns(x, 3)3")
+  expect_identical(test_lr(mod_lm_lin, mod_lm_int)$var,
+                   "x")
+  expect_identical(test_lr(mod_lm_lin, mod_lm_fix)$var,
+                   "(Intercept); x")
+                   #"All of interest (inc. intercept)")
+  expect_identical(test_lr(mod_lm_lin_grp, mod_lm_int)$var,
+                   "x; grp2")
+                   #"All of interest (exc. intercept)")
+  expect_identical(test_lr(mod_lm_lin_grp, mod_lm_fix)$var,
+                   "(Intercept); x; grp2")
+                   #"All of interest (inc. intercept)")
+  expect_identical(test_lr(mod_lm_int, mod_lm_fix)$var,
+                   "(Intercept)")
+  expect_identical(test_lr(mod_lm_lin, mod_lm_int)$var,
+                   "x")
+  expect_identical(test_lr(mod_lm_lin_grp, mod_lm_lin)$var,
+                   "grp2")
   expect_identical(test_lr(mod_lm, list("x" = mod_lm_lin))$var, "x")
   expect_identical(test_lr(mod_lm, mod_lm_lin, "x")$var, "x")
 
