@@ -103,6 +103,8 @@ test_that("test_wald works", {
 })
 
 test_that(".bracket_non_an_chr works", {
+  expect_identical(.bracket_non_an_chr("("), "[[(]]")
+  expect_identical(.bracket_non_an_chr("a"), "a")
   expect_identical(.bracket_non_an_chr("abc"), "abc")
   # check that non-an chr's aren't being removed
   expect_false(identical(.bracket_non_an_chr("ab(c"), "abc"))

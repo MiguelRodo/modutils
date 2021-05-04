@@ -7,9 +7,7 @@ test_that("refit_mod works", {
   # Mixed-effects models - lme4
   # ===================
 
-  on.exit(try(detach("package:lme4", unload = TRUE), silent = TRUE))
-  on.exit(try(detach("package:lme4", unload = TRUE), silent = TRUE),
-          add = TRUE)
+  on.exit(suppressWarnings(try(detach("package:lme4", unload = TRUE), silent = TRUE)))
   suppressMessages(library(lme4))
 
   # Negative binomial

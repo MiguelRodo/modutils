@@ -74,21 +74,25 @@ test_wald <- function(fit, var, match_condn = 'start', match_print = 'inexact',
 get_est_and_vcov <- function(fit){
   UseMethod("get_est_and_vcov")
 }
+
 get_est_and_vcov.glmerMod <- function(fit){
   est_vec <- coefficients(summary(fit))[,"Estimate"]
   vcov_mat <- as.matrix(vcov(fit))
   list('est' = est_vec, 'vcov' = vcov_mat)
 }
+
 get_est_and_vcov.lmerMod <- function(fit){
   est_vec <- coefficients(summary(fit))[,"Estimate"]
   vcov_mat <- as.matrix(vcov(fit))
   list('est' = est_vec, 'vcov' = vcov_mat)
 }
+
 get_est_and_vcov.lm <- function(fit){
   est_vec <- coefficients(fit)
   vcov_mat <- vcov(fit)
   list('est' = est_vec, 'vcov' = vcov_mat)
 }
+
 get_est_and_vcov.list <- function(fit){
   est_vec <- fit$est
   vcov_mat <- fit$vcov
@@ -223,6 +227,7 @@ get_est_and_vcov.list <- function(fit){
 #'
 .bracket_non_an_chr <- function(x){
   purrr::map_chr(x, function(x_ind){
+
     x_split_vec <- purrr::map_chr(1:stringr::str_length(x_ind),
                                   function(i) stringr::str_sub(x_ind, i, i))
     is_an_vec <- purrr::map_lgl(x_split_vec, function(chr) stringr::str_detect(chr, "\\w"))
@@ -230,7 +235,7 @@ get_est_and_vcov.list <- function(fit){
     #x_out <- ifelse(!is_an_vec[1], paste0("[[", x_split_vec[1]), x_split_vec[1])
     # if string has length 1
     if(stringr::str_length(x_ind) == 1){
-      x_out <- ifelse(!is_an_vec[1], paste0(x, "[[", x_ind, "]]"), x_ind)
+      x_out <- ifelse(!is_an_vec[1], paste0("[[", x_ind, "]]"), x_ind)
       return(x_out)
     }
     # now we must count the number of times each value is repeated, if it is non-alphanumeric (otherwise it's 1)

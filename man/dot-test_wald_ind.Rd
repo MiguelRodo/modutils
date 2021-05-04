@@ -4,7 +4,7 @@
 \alias{.test_wald_ind}
 \title{Calculate Wald statistic given summary statistics}
 \usage{
-.test_wald_ind(est, vcov, ind)
+.test_wald_ind(est, vcov, ind, var)
 }
 \arguments{
 \item{est}{numeric vector. Estimates of parameters.}
