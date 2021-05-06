@@ -8,6 +8,8 @@ test_that("multiplication works", {
                              y = x^4 * ifelse(grp == "1", 3, 0) + y_re + rnorm(20, sd = 0.3))
   test_tbl$y <- test_tbl$y +  abs(min(test_tbl$y)) + 0.001
   test_tbl$y <- test_tbl$y/max(test_tbl$y + 0.001)
+  test_tbl$y_01 <- test_tbl$y/diff(range(test_tbl$y))
+  test_tbl$y_01 <- pmin(test_tbl$y_01, pmax(test_tbl$y_01, 0.99), 0.01)
 
   # check that it runs for each model type
   # ------------------------
@@ -22,11 +24,13 @@ test_that("multiplication works", {
   mod_lmertest <- lmerTest::lmer(y ~ x + (1|grp), data = test_tbl)
   mod_glmer <- suppressMessages(suppressWarnings(lme4::glmer(y ~ x + (1|grp), data = test_tbl,
                                                              family = 'binomial')))
+  mod_beta <- betareg::betareg(y ~ x, data = test_tbl)
 
   # check that we extract log-likelihoods
-  expect_true(is.numeric(get_ll(mod_lm)))
-  expect_true(is.numeric(get_ll(mod_lmer)))
-  expect_true(is.numeric(get_ll(mod_glmer)))
+  expect_true(is.numeric(ll(mod_lm)))
+  expect_true(is.numeric(ll(mod_lmer)))
+  expect_true(is.numeric(ll(mod_glmer)))
+  expect_true(is.numeric(ll(mod_beta)))
 
   # check that we extract estimates properly
   expect_true(tibble::is_tibble(get_coef(mod_lm)))

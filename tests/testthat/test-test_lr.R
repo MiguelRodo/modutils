@@ -25,9 +25,9 @@ test_that("test_lr works", {
   # ------------------------
 
   # check that we extract log-likelihoods
-  expect_true(is.numeric(get_ll(mod_lm)))
-  expect_true(is.numeric(get_ll(mod_lmer)))
-  expect_true(is.numeric(get_ll(mod_glmer)))
+  expect_true(is.numeric(ll(mod_lm)))
+  expect_true(is.numeric(ll(mod_lmer)))
+  expect_true(is.numeric(ll(mod_glmer)))
 
   # check that we extract estimates properly
   expect_true(tibble::is_tibble(get_coef(mod_lm)))

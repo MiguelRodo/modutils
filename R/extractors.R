@@ -1,16 +1,55 @@
 #' @title Extract log-likelihoods
+#'
+#' @description A wrapper around \code{logLik} essentially. Implemented
+#' just in case there is a model that does not have a \code{logLik} generic.
+#'
+#' @param mod All objects that have a method for them in \code{broom::glance} or
+#' \code{broom.mixed::glance} or \code{modutils:::.;;} or \code{stats::logLik}.
+#' Run \code{library(broom.mixed); utils::methods(broom:glance)}
+#' or \code{library(stats); utils::methods(stats::logLik)} to see a list.
+#'@param get_ll function. A function that takes a model as input and returns
+#'the log-likelihood. Provided so that the user need not write a method for
+#'a package if the log-likelihood function is not available.
+#' @return Numeric vector of length one containing the log-likelihood.
+#'
 #' @export
-get_ll <- function(mod) UseMethod("get_ll")
-#' @export
-get_ll.lm <- function(mod) logLik(mod)[1]
-#' @export
-get_ll.lmerMod <- function(mod){
-  summary(mod)$logLik[1]
+#'
+#' @examples
+#' set.seed(3)
+#' test_tbl <- data.frame(x = 1:10)
+#' test_tbl$y <- 2 * test_tbl$x + rnorm(10)
+#' mod_lm <- lm(y ~ x, data = test_tbl)
+#' ll(mod_lm)
+ll <- function(mod, get_ll = NULL){
+  if(!is.null(get_ll)){
+    ll <- get_ll(mod)
+    if(!is.numeric(ll)) stop(paste0("Function get_ll supplied to ll returns an object of class ",
+                                    paste0(class(mod), collapse = "/"), "when it should be a numeric vector of length 1."))
+    if(length(ll) != 1) stop(paste0("Function get_ll supplied to ll returns an object of length ",
+                                    length(ll), "insted of length 1."))
+    return(ll)
+  }
+  ll <-  ll <- try(logLik(mod)[[1]], silent = TRUE)
+  if(class(ll) != 'try-error'){
+    return(ll)
+  } else{
+    ll <- try(broom.mixed::glance(mod)$logLik, silent = TRUE)
+  }
+  if(class(ll) != 'try-error'){
+    return(ll)
+  } else try(modutils::.ll(mod), silent = TRUE)
+
+
+  if(class(ll) == 'try-error'){
+    stop(paste0("ll not available for models of class",
+                paste0(class(mod), collapse = "/"), ". Add method for such a model for generic modutils::.ll or pass such a function to the get_ll parameter of ll"))
+  }
+  ll
 }
-#' @export
-get_ll.glmerMod <- function(mod){
-  summary(mod)$logLik[1]
-}
+
+#' @title Extract log-likelihood
+.ll <- function(mod) UseMethod(".ll")
+
 
 #' @title Extract model estimates
 #' @export

@@ -51,8 +51,8 @@ test_lr <- function(mod_large, mod_small, var = NULL){
   # ----------------
 
   # extract log-likelihoods
-  ll1 <- get_ll(mod_large)
-  ll0 <- get_ll(mod_small)
+  ll1 <- ll(mod_large)
+  ll0 <- ll(mod_small)
 
   # extract degrees of freedom
   df1 <- get_dof(mod_large)

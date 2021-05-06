@@ -16,4 +16,6 @@ RoxygenNote: 7.1.1
 Imports: 
     magrittr,
     rlang,
-    purrr
+    purrr,
+    broom.mixed,
+    broom
