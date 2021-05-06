@@ -45,6 +45,7 @@ test_wald <- function(fit, var, match_condn = 'start', match_print = 'inexact',
     warning("var is coerced to a list in test_wald")
     var <- list(var)
   }
+
   # ensure 0 and 1 are characters
   var <- purrr::map(var, function(x){
     if(is.character(x)) return(x)

@@ -118,8 +118,13 @@ get_mod_fml_as_chr <- function(var_dep, var_exp = NULL, var_exp_spline = NULL, v
         # so add argument accordingly
         if(param_nm == 'knots'){
           param_arg <- paste0("c(", paste0(params_curr[[j]], collapse = ", "), ")")
+          rhs_spline_add <- paste0(rhs_spline_add, ", ", param_nm, " = ", param_arg)
         }
-        rhs_spline_add <- paste0(rhs_spline_add, ", ", param_nm, " = ", param_arg)
+        if(param_nm == "df"){
+          param_arg <- params_curr[[j]]
+          rhs_spline_add <- paste0(rhs_spline_add, ", ", param_nm, " = ", param_arg)
+        }
+
       }
     }
     # add closing bracket for this spline term

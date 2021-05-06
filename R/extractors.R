@@ -90,22 +90,42 @@ get_resid.glmerMod <- function(mod) tibble::tibble(.resid_raw = residuals(mod, t
 #' @return
 #' A tibble with column \code{pred}.
 #' @export
-get_pred <- function(mod) UseMethod("get_pred")
+get_pred <- function(mod, ...) UseMethod("get_pred")
 
 #' @export
-get_pred.lm <- function(mod) tibble::tibble(.pred_resp = predict(mod),
-                                            .pred_lin = predict(mod),
-                                            .pred_resp_no_re =  predict(mod),
-                                            .pred_lin_no_re =  predict(mod))
+get_pred.lm <- function(mod, ...) tibble::tibble(.pred_resp = predict(mod, ...),
+                                                 .pred_lin = predict(mod, ...),
+                                                 .pred_resp_no_re =  predict(mod, ...),
+                                                 .pred_lin_no_re =  predict(mod, ...))
 
 #' @export
-get_pred.lmerMod <- function(mod) tibble::tibble(.pred_resp = predict(mod, type = 'response'),
-                                                 .pred_lin = predict(mod, type = 'link'),
-                                                 .pred_resp_no_re = predict(mod, type = 'response', re.form = ~0),
-                                                 .pred_lin_no_re = predict(mod, type = 'link', re.form = ~0))
+get_pred.lmerMod <- function(mod, ...) tibble::tibble(.pred_resp = predict(mod, type = 'response', ...),
+                                                      .pred_lin = predict(mod, type = 'link', ...),
+                                                      .pred_resp_no_re = predict(mod, type = 'response', re.form = ~0, ...),
+                                                      .pred_lin_no_re = predict(mod, type = 'link', re.form = ~0, ...))
 
 #' @export
-get_pred.glmerMod <- function(mod) tibble::tibble(.pred_resp = predict(mod, type = 'response'),
-                                                  .pred_lin = predict(mod, type = 'link'),
-                                                  .pred_resp_no_re = predict(mod, type = 'response', re.form = ~0),
-                                                  .pred_lin_no_re = predict(mod, type = 'link', re.form = ~0))
+get_pred.glmerMod <- function(mod, ...) tibble::tibble(.pred_resp = predict(mod, type = 'response', ...),
+                                                        .pred_lin = predict(mod, type = 'link', ...),
+                                                        .pred_resp_no_re = predict(mod, type = 'response', re.form = ~0, ...),
+                                                        .pred_lin_no_re = predict(mod, type = 'link', re.form = ~0, ...))
+
+#' @title Extract the standard error of prediction
+#'
+#' @param mod model object of class 'lm', 'lmerMod' or 'glmerMod'.
+get_se <- function(fit, data){
+
+  # preparation
+  # ==================
+
+  # checks for availability
+  if(missing(data)) stop("data missing in get_se")
+  if(missing(fit)) stop("fit missing in get_se")
+
+  # ensure data is a matrix or a data frame
+  if(!class(data) %in% c("matrix", "data.frame")){
+    stop(paste0("data has class ", paste0(class(data), collapse = " "), "instead of data.frame or matrix in get_se"))
+  }
+
+
+}

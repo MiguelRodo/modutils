@@ -15,6 +15,7 @@ test_that("multiplication works", {
   # fit model
   mod_lm_fix <- lm(y ~ -1, data = test_tbl)
   mod_lm_int <- lm(y ~ 1, data = test_tbl)
+  mod_lm_cont <- lm(y ~ x, data = test_tbl)
   mod_lm <- lm(y ~ splines::ns(x, 3), data = test_tbl)
   mod_lmer <- lme4::lmer(y ~ x + (1|grp), data = test_tbl)
   mod_lmer_re2 <- lme4::lmer(y ~ x + (1|grp) + (x|grp_add), data = test_tbl)
@@ -51,4 +52,7 @@ test_that("multiplication works", {
   expect_identical(class(get_pred(mod_lm)), c("tbl_df", "tbl", "data.frame"))
   expect_identical(colnames(get_pred(mod_lmer)), c(".pred_resp", ".pred_lin", ".pred_resp_no_re", ".pred_lin_no_re"))
   expect_identical(nrow(get_pred(mod_glmer)), 60L)
+
+  # check that we get the standard errors out
+
 })
