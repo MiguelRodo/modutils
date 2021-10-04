@@ -47,7 +47,7 @@
 #'
 #' @export
 get_mod_fml_as_chr <- function(var_dep, var_exp = NULL, var_exp_spline = NULL, var_re = NULL,
-                               var_offset = NULL, var_conf = NULL,
+                               var_offset = NULL, var_conf = NULL, var_int = NULL,
                                rhs_text = NULL,
                                int = TRUE, sub_exp = 0){
 
@@ -102,10 +102,10 @@ get_mod_fml_as_chr <- function(var_dep, var_exp = NULL, var_exp_spline = NULL, v
                               "FALSE" = setNames(as.list(var_exp), var_exp))
 
   # splines
+  if(length(var_exp_spline) > 0) library(splines)
   for(i in seq_along(var_exp_spline)){
     # specify splines pkg, its fn and the variable we need a splines basis for
-    rhs_spline_add <- paste0("splines::", var_exp_spline[[i]]$fn,
-                             "(", names(var_exp_spline)[i])
+    rhs_spline_add <- paste0(var_exp_spline[[i]]$fn, "(", names(var_exp_spline)[i])
     # add additional parameters if available
     if('params' %in% names(var_exp_spline[[i]])){
       # extract parameters
@@ -124,6 +124,10 @@ get_mod_fml_as_chr <- function(var_dep, var_exp = NULL, var_exp_spline = NULL, v
           param_arg <- params_curr[[j]]
           rhs_spline_add <- paste0(rhs_spline_add, ", ", param_nm, " = ", param_arg)
         }
+        if(param_nm == "Boundary.knots"){
+          param_arg <- paste0("c(", paste0(params_curr[[j]], collapse = ", "), ")")
+          rhs_spline_add <- paste0(rhs_spline_add, ", ", param_nm, " = ", param_arg)
+        }
 
       }
     }
@@ -134,14 +138,34 @@ get_mod_fml_as_chr <- function(var_dep, var_exp = NULL, var_exp_spline = NULL, v
                                                                 names(var_exp_spline)[i]))
   }
 
+  if(!is.null(var_int)){
+    if(!is.list(var_int)) var_int <- list(var_int)
+    rhs_comp_exp_int_list <- purrr::map(var_int, function(x){
+      paste0(rhs_comp_exp_list[[x[1]]], ":", rhs_comp_exp_list[[x[2]]])
+    }) %>%
+      setNames(purrr::map_chr(var_int, function(x) paste(x, collapse = ":")))
+  } else rhs_comp_exp_int_list <- NULL
+
   # create list of rhs elements
-  rhs_comp_exp <- paste0(rhs_comp_exp_list, collapse = " + ")
+  rhs_comp_exp <- paste0(c(rhs_comp_exp_list, rhs_comp_exp_int_list),
+                         collapse = " + ")
   rhs_full <- paste0(rhs_null, " + ", rhs_comp_exp)
   rhs_list <- list(null = rhs_null,
                    full = rhs_full)
 
   # create nested models of full model
+  # need to make it work for more than one entry
   if(sub_exp > 0 && length(rhs_comp_exp_list) > 1){
+    for(i in seq_along(var_int)){
+      rhs_comp_exp_int_list_inc <- rhs_comp_exp_int_list[-i]
+      rhs_list_add_nm <- names(rhs_comp_exp_int_list)[i]
+      rhs_list_add_fml <- paste0(rhs_null, " + ",
+                                 paste0(c(rhs_comp_exp_list, rhs_comp_exp_int_list_inc),
+                                        collapse = " + "))
+      rhs_list %<>% append(setNames(list(rhs_list_add_fml),
+                                    rhs_list_add_nm))
+
+    }
     n_var <- length(rhs_comp_exp_list)
     for(n_exc in 1:min(sub_exp, n_var - 1)){
       #exc_mat <- gtools::permutations(n_var, n_exc)
@@ -151,8 +175,17 @@ get_mod_fml_as_chr <- function(var_dep, var_exp = NULL, var_exp_spline = NULL, v
         rhs_comp_exp_inc <- rhs_comp_exp_list[-exc_mat[,j]]
         rhs_list_add_nm <- paste0(names(rhs_comp_exp_list[exc_mat[,j]]),
                                   collapse = "~p~")
+        if(!is.null(var_int)){
+          rhs_comp_exp_int_list_inc_ind <- purrr::map_lgl(var_int, function(x){
+            !any(purrr::map_lgl(x, function(elem) identical(elem, rhs_list_add_nm)))
+          })
+          rhs_comp_exp_int_list_inc <- rhs_comp_exp_int_list[rhs_comp_exp_int_list_inc_ind]
+        } else rhs_comp_exp_int_list_inc <- NULL
+
         rhs_list_add_fml <- paste0(rhs_null, " + ",
-                                   paste0(rhs_comp_exp_inc, collapse = " + "))
+                                   paste0(c(rhs_comp_exp_inc,
+                                            rhs_comp_exp_int_list_inc),
+                                          collapse = " + "))
         rhs_list %<>% append(setNames(list(rhs_list_add_fml),
                                       rhs_list_add_nm))
       }

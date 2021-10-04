@@ -72,34 +72,6 @@ test_wald <- function(fit, var, match_condn = 'start', match_print = 'inexact',
                   match_print = match_print, intercept_nm = intercept_nm)})
 }
 
-get_est_and_vcov <- function(fit){
-  UseMethod("get_est_and_vcov")
-}
-
-get_est_and_vcov.glmerMod <- function(fit){
-  est_vec <- coefficients(summary(fit))[,"Estimate"]
-  vcov_mat <- as.matrix(vcov(fit))
-  list('est' = est_vec, 'vcov' = vcov_mat)
-}
-
-get_est_and_vcov.lmerMod <- function(fit){
-  est_vec <- coefficients(summary(fit))[,"Estimate"]
-  vcov_mat <- as.matrix(vcov(fit))
-  list('est' = est_vec, 'vcov' = vcov_mat)
-}
-
-get_est_and_vcov.lm <- function(fit){
-  est_vec <- coefficients(fit)
-  vcov_mat <- vcov(fit)
-  list('est' = est_vec, 'vcov' = vcov_mat)
-}
-
-get_est_and_vcov.list <- function(fit){
-  est_vec <- fit$est
-  vcov_mat <- fit$vcov
-  list('est' = est_vec, 'vcov' = vcov_mat)
-}
-
 #' @title Calculate wald statistic from coef estimates and vcov-mat
 .test_wald <- function(est, vcov, var, match_condn, match_print, intercept_nm){
 

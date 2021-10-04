@@ -75,6 +75,22 @@ get_coef.lmerMod <- function(mod){
 #' @export
 get_coef.glmerMod <- function(mod){
   coef_mat <- coef(summary(mod))
+  zt_val <- ifelse(any(stringr::str_detect(colnames(coef_mat), "t value")),
+                   "t value",
+                   "z value")
+  zt_p <- ifelse(any(stringr::str_detect(colnames(coef_mat), "Pr([[>]][[|]]t[[|]])")),
+                   "Pr(>|t|)",
+                   "Pr(>|z|)")
+  tibble::tibble(var = rownames(coef_mat),
+                 est = coef_mat[,"Estimate"],
+                 se = coef_mat[,"Std. Error"],
+                 test_stat = coef_mat[,zt_val],
+                 p = coef_mat[,zt_p])
+}
+
+#' @export
+get_coef.glmmTMB <- function(mod){
+  coef_mat <- coef(summary(mod))$cond
   tibble::tibble(var = rownames(coef_mat),
                  est = coef_mat[,"Estimate"],
                  se = coef_mat[,"Std. Error"],
@@ -92,6 +108,8 @@ get_dof.lm <- function(mod) length(mod$coefficients)
 get_dof.lmerMod <- function(mod) ncol(coef(mod)[[1]])
 #' @export
 get_dof.glmerMod <- function(mod) ncol(coef(mod)[[1]])
+#' @export
+get_dof.glmmTMB <- function(mod) nrow(coef(summary(mod))$cond)
 
 #' @title Extract residuals
 #'
@@ -121,6 +139,34 @@ get_resid.lmerMod <- function(mod) tibble::tibble(.resid_raw = residuals(mod, ty
 #' @export
 get_resid.glmerMod <- function(mod) tibble::tibble(.resid_raw = residuals(mod, type = 'deviance', scaled = FALSE),
                                                    .resid_std = residuals(mod, type = 'deviance', scaled = TRUE))
+#' @export
+get_resid.default <- function(mod){
+  broom_augment_tbl <- try(broom.mixed::augment(mod),
+                           silent = TRUE)
+  if(class(broom_augment_tbl)[1] == 'try-error'){
+    resid_vec_raw <- try(residuals(mod), silent = TRUE)
+    if(class(resid_vec_raw)[1] == 'try-error'){
+      return(tibble::tibble(
+        .resid_raw = NA_real_,
+        .resid_std = NA_real_
+      )[-1,])
+    }
+    tibble(.resid_raw = resid_vec_raw,
+           .resid_std = resid_vec_raw/sd(resid_vec_raw))
+  }
+  if(!'.std.resid' %in% colnames(broom_augment_tbl)){
+    broom_augment_tbl %<>%
+      mutate(.resid_std = .resid/sd(.resid))
+    try(broom_augment_tbl %<>% rename(.resid_raw = .resid),
+        silent = TRUE)
+  } else{
+    broom_augment_tbl %<>%
+      rename(.resid_std = .std.resid)
+  }
+
+  broom_augment_tbl %>%
+    select(.resid_raw, .resid_std)
+}
 
 #' @title Extract predicted values
 #'
@@ -148,6 +194,45 @@ get_pred.glmerMod <- function(mod, ...) tibble::tibble(.pred_resp = predict(mod,
                                                         .pred_lin = predict(mod, type = 'link', ...),
                                                         .pred_resp_no_re = predict(mod, type = 'response', re.form = ~0, ...),
                                                         .pred_lin_no_re = predict(mod, type = 'link', re.form = ~0, ...))
+#' @export
+get_pred.glmmTMB <- function(mod, ...) tibble::tibble(.pred_resp = predict(mod, type = 'response', ...),
+                                                      .pred_lin = predict(mod, type = 'link', ...),
+                                                      .pred_resp_no_re = predict(mod, type = 'response', re.form = ~0, ...),
+                                                      .pred_lin_no_re = predict(mod, type = 'link', re.form = ~0, ...))
+
+#' @export
+get_pred.default <- function(mod, ...){
+  return(tibble::tibble(
+    .pred_resp = NA_real_,
+    .pred_lin = NA_real_,
+    .pred_resp_no_re = NA_real_,
+    .pred_resp_no_re = NA_real_
+  )[-1,])
+  broom_augment_tbl <- try(broom.mixed::augment(mod),
+                           silent = TRUE)
+  if(class(broom_augment_tbl)[1] == 'try-error'){
+    pred_vec <- try(predict(mod), silent = TRUE)
+    if(class(pred_vec)[1] == 'try-error'){
+      return(tibble::tibble(
+        .pred_resp = NA_real_,
+        .pred_lin = NA_real_,
+        .pred_resp_no_re = NA_real_,
+        .pred_resp_no_re = NA_real_
+      )[-1,])
+    }
+    tibble(.pred = resid_vec_raw,
+           .resid_std = resid_vec_raw/sd(resid_vec_raw))
+  }
+  if(!'.resid_std' %in% colnames(broom_augment_tbl)){
+    broom_augment_tbl %<>%
+      mutate(.resid_std = .resid/sd(.resid))
+    try(broom_augment_tbl %<>% rename(.resid_raw = .resid),
+        silent = TRUE)
+  }
+
+  broom_augment_tbl %>%
+    select(.resid_raw, .resid_std)
+}
 
 #' @title Extract the standard error of prediction
 #'
@@ -167,4 +252,38 @@ get_se <- function(fit, data){
   }
 
 
+}
+
+get_est_and_vcov <- function(fit){
+  UseMethod("get_est_and_vcov")
+}
+
+get_est_and_vcov.glmerMod <- function(fit){
+  est_vec <- coefficients(summary(fit))[,"Estimate"]
+  vcov_mat <- as.matrix(vcov(fit))
+  list('est' = est_vec, 'vcov' = vcov_mat)
+}
+
+get_est_and_vcov.glmmTMB <- function(fit){
+  est_vec <- coefficients(summary(fit))$cond[,"Estimate"]
+  vcov_mat <- vcov(fit)$cond
+  list('est' = est_vec, 'vcov' = vcov_mat)
+}
+
+get_est_and_vcov.lmerMod <- function(fit){
+  est_vec <- coefficients(summary(fit))[,"Estimate"]
+  vcov_mat <- as.matrix(vcov(fit))
+  list('est' = est_vec, 'vcov' = vcov_mat)
+}
+
+get_est_and_vcov.lm <- function(fit){
+  est_vec <- coefficients(fit)
+  vcov_mat <- vcov(fit)
+  list('est' = est_vec, 'vcov' = vcov_mat)
+}
+
+get_est_and_vcov.list <- function(fit){
+  est_vec <- fit$est
+  vcov_mat <- fit$vcov
+  list('est' = est_vec, 'vcov' = vcov_mat)
 }

@@ -61,4 +61,5 @@ refit_mod <- function(mod_expr_as_chr, pkg, family, theta_fix = NULL, env = rlan
       return(mod)
     }
   }
+  try(stop())
 }

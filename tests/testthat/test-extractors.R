@@ -24,6 +24,8 @@ test_that("multiplication works", {
   mod_lmertest <- lmerTest::lmer(y ~ x + (1|grp), data = test_tbl)
   mod_glmer <- suppressMessages(suppressWarnings(lme4::glmer(y ~ x + (1|grp), data = test_tbl,
                                                              family = 'binomial')))
+  mod_glmer_gamma <- suppressMessages(suppressWarnings(lme4::glmer(y ~ x + (1|grp), data = test_tbl,
+                                                             family = Gamma(link = 'log'))))
   mod_beta <- betareg::betareg(y ~ x, data = test_tbl)
 
   # check that we extract log-likelihoods
@@ -35,6 +37,7 @@ test_that("multiplication works", {
   # check that we extract estimates properly
   expect_true(tibble::is_tibble(get_coef(mod_lm)))
   expect_true(tibble::is_tibble(get_coef(mod_lm_fix)))
+  expect_true(tibble::is_tibble(get_coef(mod_glmer_gamma)))
   expect_identical(ncol(get_coef(mod_lm_fix)), 5L)
   expect_identical(nrow(get_coef(mod_lm_fix)), 0L)
   expect_identical(nrow(get_coef(mod_lmer)), 2L)
